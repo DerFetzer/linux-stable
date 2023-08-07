@@ -57,6 +57,15 @@ struct rockchip_encoder {
 	struct drm_encoder encoder;
 };
 
+struct rockchip_drm_sub_dev {
+	struct list_head list;
+	struct drm_connector *connector;
+	struct device_node *of_node;
+	int (*loader_protect)(struct drm_encoder *encoder, bool on);
+	void (*update_vfp_for_vrr)(struct drm_connector *connector, struct drm_display_mode *mode,
+				   int vfp);
+};
+
 int rockchip_drm_dma_attach_device(struct drm_device *drm_dev,
 				   struct device *dev);
 void rockchip_drm_dma_detach_device(struct drm_device *drm_dev,
@@ -67,6 +76,9 @@ int rockchip_drm_wait_vact_end(struct drm_crtc *crtc, unsigned int mstimeout);
 int rockchip_drm_encoder_set_crtc_endpoint_id(struct rockchip_encoder *rencoder,
 					      struct device_node *np, int port, int reg);
 int rockchip_drm_endpoint_is_subdriver(struct device_node *ep);
+void rockchip_drm_register_sub_dev(struct rockchip_drm_sub_dev *sub_dev);
+void rockchip_drm_unregister_sub_dev(struct rockchip_drm_sub_dev *sub_dev);
+int rockchip_drm_add_modes_noedid(struct drm_connector *connector);
 extern struct platform_driver cdn_dp_driver;
 extern struct platform_driver dw_hdmi_rockchip_pltfm_driver;
 extern struct platform_driver dw_mipi_dsi_rockchip_driver;

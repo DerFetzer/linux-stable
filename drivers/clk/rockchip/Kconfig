@@ -107,4 +107,12 @@ config CLK_RK3588
 	help
 	  Build the driver for RK3588 Clock Driver.
 
+config CLK_RK618
+	tristate "Clock driver for Rockchip RK618"
+	depends on MFD_RK618
+	default MFD_RK618
+	select COMMON_CLK_ROCKCHIP_REGMAP
+
+source "drivers/clk/rockchip/regmap/Kconfig"
+
 endif

@@ -266,8 +266,8 @@ config MFD_MADERA_SPI
 	  Support for the Cirrus Logic Madera platform audio SoC
 	  core functionality controlled via SPI.
 
-config MFD_MAX5970
-	tristate "Maxim 5970/5978 power switch and monitor"
+config MFD_MAX597X
+	tristate "Maxim 597x power switch and monitor"
 	depends on (I2C && OF)
 	select MFD_SIMPLE_MFD_I2C
 	help
@@ -1195,6 +1195,16 @@ config MFD_RC5T583
 	  like GPIO, interrupts, RTC, LDO and DCDC regulators, onkey.
 	  Additional drivers must be enabled in order to use the
 	  different functionality of the device.
+
+config MFD_RK618
+	tristate "Rockchip RK618 MFD Driver"
+	depends on I2C
+	depends on OF
+	select MFD_CORE
+	select REGMAP_I2C
+	select REGMAP_IRQ
+	help
+	  if you say yes here you get support for the RK618 from Rockchip.
 
 config MFD_RK8XX
 	tristate
