@@ -224,6 +224,9 @@ static LIST_HEAD(rockchip_drm_sub_dev_list);
 
 void rockchip_drm_register_sub_dev(struct rockchip_drm_sub_dev *sub_dev)
 {
+    if (IS_ERR_OR_NULL(sub_dev)) {
+        return;
+    }
 	mutex_lock(&rockchip_drm_sub_dev_lock);
 	list_add_tail(&sub_dev->list, &rockchip_drm_sub_dev_list);
 	mutex_unlock(&rockchip_drm_sub_dev_lock);
@@ -232,6 +235,10 @@ EXPORT_SYMBOL(rockchip_drm_register_sub_dev);
 
 void rockchip_drm_unregister_sub_dev(struct rockchip_drm_sub_dev *sub_dev)
 {
+    if (IS_ERR_OR_NULL(sub_dev) ||
+            (!(sub_dev->list.next) && !(sub_dev->list.prev))) {
+        return;
+    }
 	mutex_lock(&rockchip_drm_sub_dev_lock);
 	list_del(&sub_dev->list);
 	mutex_unlock(&rockchip_drm_sub_dev_lock);

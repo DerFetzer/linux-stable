@@ -5,6 +5,7 @@
  * Author: Wyon Bi <bivvy.bi@rock-chips.com>
  */
 
+#include "drm/drm_mode.h"
 #include <linux/clk.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
@@ -1150,6 +1151,7 @@ static int rk618_dsi_probe(struct platform_device *pdev)
 
 	dsi->base.funcs = &rk618_dsi_bridge_funcs;
 	dsi->base.of_node = dev->of_node;
+    dsi->base.type = DRM_MODE_CONNECTOR_DSI; 
 	drm_bridge_add(&dsi->base);
 
 	dsi->host.dev = dev;

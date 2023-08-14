@@ -72,9 +72,11 @@ static int rk618_power_on(struct rk618 *rk618)
 		gpiod_direction_output(rk618->reset_gpio, 1);
 		usleep_range(50000, 60000);
 		gpiod_direction_output(rk618->reset_gpio, 0);
+		usleep_range(50000, 60000);
 	}
+	ret = regmap_read(rk618->regmap, 0x0000, &reg);
 
-	return 0;
+	return ret;
 }
 
 static void rk618_power_off(struct rk618 *rk618)
@@ -150,8 +152,11 @@ rk618_probe(struct i2c_client *client)
 	}
 
 	ret = rk618_power_on(rk618);
-	if (ret)
+	if (ret) {
+        dev_err(dev, "failed to power on device: %d\n", ret);
 		goto err_clk_disable;
+    }
+
 
 	ret = mfd_add_devices(dev, -1, rk618_devs, ARRAY_SIZE(rk618_devs),
 			      NULL, 0, NULL);
