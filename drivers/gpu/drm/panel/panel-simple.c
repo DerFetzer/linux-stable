@@ -4565,6 +4565,37 @@ static const struct panel_desc_dsi boe_tv080wum_nl0 = {
 	.lanes = 4,
 };
 
+static const struct drm_display_mode haier_pad1043_mode = {
+	.clock = 164000,
+	.hdisplay = 1920,
+	.hsync_start = 1920 + 446,
+	.hsync_end = 1920 + 446 + 11,
+	.htotal = 1920 + 446 + 11 + 11,
+	.vdisplay = 1200,
+	.vsync_start = 1200 + 10,
+	.vsync_end = 1200 + 10 + 5,
+	.vtotal = 1200 + 10 + 5 + 5,
+	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
+};
+
+static const struct panel_desc_dsi haier_pad1043 = {
+	.desc = {
+		.modes = &haier_pad1043_mode,
+		.num_modes = 1,
+		.size = {
+			.width = 218,
+			.height = 136,
+		},
+        .bpc = 8,
+		.connector_type = DRM_MODE_CONNECTOR_DSI,
+	},
+	.flags = MIPI_DSI_MODE_VIDEO |
+		 MIPI_DSI_MODE_VIDEO_BURST |
+		 MIPI_DSI_MODE_VIDEO_SYNC_PULSE,
+	.format = MIPI_DSI_FMT_RGB888,
+	.lanes = 4,
+};
+
 static const struct drm_display_mode lg_ld070wx3_sl01_mode = {
 	.clock = 71000,
 	.hdisplay = 800,
@@ -4716,6 +4747,9 @@ static const struct of_device_id dsi_of_match[] = {
 	}, {
 		.compatible = "boe,tv080wum-nl0",
 		.data = &boe_tv080wum_nl0
+	}, {
+		.compatible = "haier,pad1043-panel",
+		.data = &haier_pad1043
 	}, {
 		.compatible = "lg,ld070wx3-sl01",
 		.data = &lg_ld070wx3_sl01
