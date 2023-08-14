@@ -16,7 +16,7 @@ clean:
 	@cc -c $^
 
 %.bin.nocrc:	%.o
-	@objcopy -Obinary $^ $@
+	@objcopy -Obinary -j .data $^ $@
 
 %.crc:	%.bin.nocrc
 	@list=$$(for i in `seq 1 127`; do head -c$$i $^ | tail -c1 \
@@ -27,10 +27,10 @@ clean:
 	@cc -c -DCRC="$$(cat $*.crc)" -o $@ $*.S
 
 %.bin:	%.p
-	@objcopy -Obinary $^ $@
+	@objcopy -Obinary -j .data $^ $@
 
 %.bin.ihex:	%.p
-	@objcopy -Oihex $^ $@
+	@objcopy -Oihex -j .data $^ $@
 	@dos2unix $@ 2>/dev/null
 
 %.c:	%.bin
