@@ -3,6 +3,7 @@
  * Copyright (c) 2014, Fuzhou Rockchip Electronics Co., Ltd
  */
 
+#include "asm/io.h"
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
@@ -30,7 +31,7 @@ static void dw_mci_rk3288_set_ios(struct dw_mci *host, struct mmc_ios *ios)
 {
 	struct dw_mci_rockchip_priv_data *priv = host->priv;
 	int ret;
-	unsigned int cclkin;
+	volatile unsigned int cclkin;
 	u32 bus_hz;
 
 	if (ios->clock == 0)
@@ -296,6 +297,16 @@ static int dw_mci_rockchip_init(struct dw_mci *host)
 
 	/* It is slot 8 on Rockchip SoCs */
 	host->sdio_id0 = 8;
+
+	if (of_device_is_compatible(host->dev->of_node, "rockchip,rk2928-dw-mshc")) {
+        // Set SDIO drive strength to 12mA
+        void __iomem *grf_io_con_3 = ioremap(0x20008100, 4);
+        u32 value = readl(grf_io_con_3);
+        
+        writel(value | 0b11 << (16 + 2) | 0b11 << 2, grf_io_con_3);
+
+        iounmap(grf_io_con_3);
+	}
 
 	if (of_device_is_compatible(host->dev->of_node, "rockchip,rk3288-dw-mshc")) {
 		host->bus_hz /= RK3288_CLKGEN_DIV;
