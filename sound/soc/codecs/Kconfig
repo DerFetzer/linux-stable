@@ -175,6 +175,7 @@ config SND_SOC_ALL_CODECS
 	imply SND_SOC_PCM512x_SPI
 	imply SND_SOC_PEB2466
 	imply SND_SOC_RK3328
+	imply SND_SOC_RK618
 	imply SND_SOC_RK817
 	imply SND_SOC_RT274
 	imply SND_SOC_RT286
@@ -1338,6 +1339,10 @@ config SND_SOC_RK3328
 config SND_SOC_RK817
 	tristate "Rockchip RK817 audio CODEC"
 	depends on MFD_RK8XX || COMPILE_TEST
+
+config SND_SOC_RK618
+	tristate "Rockchip RK618 audio CODEC"
+	depends on MFD_RK618 || COMPILE_TEST
 
 config SND_SOC_RL6231
 	tristate

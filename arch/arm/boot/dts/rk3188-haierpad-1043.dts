@@ -97,7 +97,28 @@
         compatible = "pwm-backlight";
         pwms = <&pwm3 0 25000>;
         enable-gpios = <&gpio0 RK_PA2 GPIO_ACTIVE_HIGH>;
-        default-brightness-level = <150>;
+		brightness-levels = <0 4095>;
+		num-interpolated-steps = <4095>;
+		default-brightness-level = <2800>;
+    };
+
+    sound {
+        compatible = "simple-audio-card";
+        simple-audio-card,name = "DUMMY_SND";
+
+        simple-audio-card,dai-link@0 {
+            format = "i2s";
+            bitclock-master = <&snd_cpu>;
+            frame-master = <&snd_cpu>;
+
+            snd_cpu: cpu {
+                sound-dai = <&i2s0>;
+            };
+
+            snd_codec: codec {
+                sound-dai = <&codec>;
+            };
+        };
     };
 };
 
@@ -287,7 +308,7 @@
 		compatible = "rockchip,rk618";
 		reg = <0x50>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&i2s0_bus>, <&lcdc1_dclk>, <&lcdc1_den>, <&lcdc1_hsync>, <&lcdc1_vsync>, <&lcdc1_rgb24>;
+		pinctrl-0 = <&lcdc1_dclk>, <&lcdc1_den>, <&lcdc1_hsync>, <&lcdc1_vsync>, <&lcdc1_rgb24>;
 		clocks = <&cru SCLK_I2S0>;
 		clock-names = "clkin";
 		assigned-clocks = <&cru SCLK_I2S0>;
@@ -295,6 +316,12 @@
 		reset-gpios = <&gpio3 RK_PB2 GPIO_ACTIVE_LOW>;
 		status = "okay";
         pwr-supply = <&vcc_rk618_ts>;
+
+		codec: codec {
+			compatible = "rockchip,rk618-codec";
+            #sound-dai-cells = <0>;
+			status = "okay";
+		};
 
 		clock: cru {
 			compatible = "rockchip,rk618-cru";
@@ -410,14 +437,6 @@
 		interrupts = <RK_PD2 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "host-wake";
 	};
-};
-
-&pwm1 {
-	status = "okay";
-};
-
-&pwm2 {
-	status = "okay";
 };
 
 &pwm3 {
@@ -547,7 +566,7 @@
 	};
 };
 
-&spdif {
+&i2s0 {
 	status = "okay";
 };
 
