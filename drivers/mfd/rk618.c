@@ -94,7 +94,7 @@ static const struct regmap_config rk618_regmap_config = {
 	.reg_bits = 16,
 	.val_bits = 32,
 	.reg_stride = 4,
-	.max_register = 0x9c,
+	.max_register = 0x13ff,
 	.reg_format_endian = REGMAP_ENDIAN_NATIVE,
 	.val_format_endian = REGMAP_ENDIAN_NATIVE,
 };

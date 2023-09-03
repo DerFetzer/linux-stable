@@ -551,9 +551,7 @@ int snd_soc_put_step_volsw_2r(struct snd_kcontrol *kcontrol,
 
 			old_l = old_l << shift;
 
-			mutex_lock(&component->io_mutex);
 			err = snd_soc_component_write(component, reg, old_reg_l | old_l);
-			mutex_unlock(&component->io_mutex);
 			if (err < 0)
 				return err;
 		}
@@ -574,9 +572,7 @@ int snd_soc_put_step_volsw_2r(struct snd_kcontrol *kcontrol,
 
 			old_r = old_r << shift;
 
-			mutex_lock(&component->io_mutex);
 			err = snd_soc_component_write(component, reg2, old_reg_r | old_r);
-			mutex_unlock(&component->io_mutex);
 			if (err < 0)
 				return err;
 		}
@@ -1691,7 +1687,7 @@ static int rk618_probe(struct snd_soc_component *component)
 	rk618_reset(component);
 
     component->dapm.bias_level = SND_SOC_BIAS_OFF;
-    rk618_set_bias_level(component, SND_SOC_BIAS_STANDBY);
+    // rk618_set_bias_level(component, SND_SOC_BIAS_STANDBY);
 
 	return 0;
 err__:
@@ -1759,28 +1755,28 @@ static int rk618_codec_parse_dt_property(struct device *dev,
 	rk618->spk_ctl_gpio = devm_gpiod_get_optional(dev, "spkctl", 0);
 	if (IS_ERR(rk618->spk_ctl_gpio)) {
 		ret = PTR_ERR(rk618->spk_ctl_gpio);
-		dev_err(dev, "failed to request enable GPIO: %d\n", ret);
+		dev_err(dev, "failed to request spkctl GPIO: %d\n", ret);
 		return ret;
 	}
 
 	rk618->hp_ctl_gpio = devm_gpiod_get_optional(dev, "hpctl", 0);
 	if (IS_ERR(rk618->hp_ctl_gpio)) {
 		ret = PTR_ERR(rk618->hp_ctl_gpio);
-		dev_err(dev, "failed to request enable GPIO: %d\n", ret);
+		dev_err(dev, "failed to request hpctl GPIO: %d\n", ret);
 		return ret;
 	}
 
 	rk618->rcv_ctl_gpio = devm_gpiod_get_optional(dev, "rcvctl", 0);
 	if (IS_ERR(rk618->rcv_ctl_gpio)) {
 		ret = PTR_ERR(rk618->rcv_ctl_gpio);
-		dev_err(dev, "failed to request enable GPIO: %d\n", ret);
+		dev_err(dev, "failed to request rcvctl GPIO: %d\n", ret);
 		return ret;
 	}
 
 	rk618->mic_sel_gpio = devm_gpiod_get_optional(dev, "micsel", 0);
 	if (IS_ERR(rk618->mic_sel_gpio)) {
 		ret = PTR_ERR(rk618->mic_sel_gpio);
-		dev_err(dev, "failed to request enable GPIO: %d\n", ret);
+		dev_err(dev, "failed to request micsel GPIO: %d\n", ret);
 		return ret;
 	}
 
