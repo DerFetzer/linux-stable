@@ -89,7 +89,6 @@ struct rk618_codec_priv {
 };
 
 static struct rk618_codec_priv *rk618_priv = NULL;
-static struct mfd_rk618 *rk618_mfd = NULL;
 static bool is_hdmi_in = false;
 
 static const unsigned int rk618_reg_defaults[RK618_PGAR_AGC_CTL5 + 1] = {
@@ -162,147 +161,6 @@ static struct rk618_reg_val_typ rk618_mfd_reg_defaults[] = {
 	{RK618_CFGMISC_CON, 0x00000000},
 };
 #define RK618_MFD_REG_LEN ARRAY_SIZE(rk618_mfd_reg_defaults)
-
-// /* mfd registers cache list */
-// static struct rk618_reg_val_typ rk618_mfd_reg_cache[] = {
-// 	{CRU_CODEC_DIV, 0x00000000},
-// 	{RK618_IO_CON0, (I2S1_OUTPUT_DISABLE | I2S0_OUTPUT_DISABLE | I2S1_IO_PULL_DOWN_DISABLE | I2S0_IO_PULL_DOWN_DISABLE) |
-// 		((I2S1_OUTPUT_DISABLE | I2S0_OUTPUT_DISABLE | I2S1_IO_PULL_DOWN_DISABLE | I2S0_IO_PULL_DOWN_DISABLE) << 16)},
-// 	{RK618_IO_CON1, (I2S1_IO_SCHMITT_INPUT_ENABLE | I2S0_IO_SCHMITT_INPUT_ENABLE) | ((I2S1_IO_SCHMITT_INPUT_ENABLE | I2S0_IO_SCHMITT_INPUT_ENABLE) << 16)},
-// 	{RK618_PCM2IS2_CON2, (0) | ((PCM_TO_I2S_MUX | APS_SEL | APS_CLR | I2S_CHANNEL_SEL) << 16)},
-// 	{CRU_CFGMISC_CON, 0x00000000},
-// };
-// #define RK618_MFD_REG_LEN ARRAY_SIZE(rk618_mfd_reg_cache)
-
-// /* If register's bit16-31 is mask bit add to this fun */
-// static int rk618_mfd_mask_register(unsigned int reg)
-// {
-// 	switch (reg) {
-// 	case RK618_IO_CON0:
-// 	case RK618_IO_CON1:
-// 	case RK618_PCM2IS2_CON2:
-// 		return 1;
-// 	default:
-// 		return 0;
-// 	}
-// }
-//
-// static struct rk618_reg_val_typ rk618_mfd_codec_bit_list[] = {
-// 	{CRU_CFGMISC_CON, AD_DA_LOOP | MICDET2_PIN_F_CODEC | MICDET1_PIN_F_CODEC},
-// };
-// #define RK618_MFD_CODEC_BIT_LEN ARRAY_SIZE(rk618_mfd_codec_bit_list)
-//
-// static int rk618_mfd_codec_bit(unsigned int reg)
-// {
-// 	int i;
-//
-// 	for (i = 0; i < RK618_MFD_CODEC_BIT_LEN; i++) {
-// 		if (rk618_mfd_codec_bit_list[i].reg == reg)
-// 			return i;
-// 	}
-//
-// 	return -1;
-// }
-//
-// static struct rk618_init_bit_typ rk618_init_bit_list[] = {
-// 	{RK618_SPKL_CTL, RK618_MUTE, RK618_INIT_MASK},
-// 	{RK618_SPKR_CTL, RK618_MUTE, RK618_INIT_MASK},
-// 	{RK618_HPL_CTL, RK618_MUTE, RK618_INIT_MASK},
-// 	{RK618_HPR_CTL, RK618_MUTE, RK618_INIT_MASK},
-// 	{RK618_MUXHP_HPMIX_CTL, RK618_HML_PWRD, RK618_HML_INIT_MASK},
-// 	{RK618_MUXHP_HPMIX_CTL, RK618_HMR_PWRD, RK618_HMR_INIT_MASK},
-// };
-// #define RK618_INIT_BIT_LIST_LEN ARRAY_SIZE(rk618_init_bit_list)
-//
-// static int rk618_init_bit_register(unsigned int reg, int i)
-// {
-// 	for (; i < RK618_INIT_BIT_LIST_LEN; i++) {
-// 		if (rk618_init_bit_list[i].reg == reg)
-// 			return i;
-// 	}
-//
-// 	return -1;
-// }
-
-// static int rk618_volatile_register(struct snd_soc_component *component, unsigned int reg)
-// {
-// 	switch (reg) {
-// 	case RK618_RESET:
-// 	case RK618_CLK_CHPUMP:
-// 	case RK618_MICKEY_DET_CTL:
-// 	case CRU_CFGMISC_CON:
-// 		return 1;
-// 	default:
-// 		return 0;
-// 	}
-// }
-//
-// static int rk618_codec_register(struct snd_soc_component *component, unsigned int reg)
-// {
-// 	switch (reg) {
-// 	case RK618_RESET:
-// 	case RK618_DAC_VOL:
-// 	case RK618_ADC_INT_CTL1:
-// 	case RK618_ADC_INT_CTL2:
-// 	case RK618_DAC_INT_CTL1:
-// 	case RK618_DAC_INT_CTL2:
-// 	case RK618_CLK_CHPUMP:
-// 	case RK618_PGA_AGC_CTL:
-// 	case RK618_PWR_ADD1:
-// 	case RK618_BST_CTL:
-// 	case RK618_DIFFIN_CTL:
-// 	case RK618_MIXINL_CTL:
-// 	case RK618_MIXINL_VOL1:
-// 	case RK618_MIXINL_VOL2:
-// 	case RK618_MIXINR_CTL:
-// 	case RK618_MIXINR_VOL1:
-// 	case RK618_MIXINR_VOL2:
-// 	case RK618_PGAL_CTL:
-// 	case RK618_PGAR_CTL:
-// 	case RK618_PWR_ADD2:
-// 	case RK618_DAC_CTL:
-// 	case RK618_LINEMIX_CTL:
-// 	case RK618_MUXHP_HPMIX_CTL:
-// 	case RK618_HPMIX_CTL:
-// 	case RK618_HPMIX_VOL1:
-// 	case RK618_HPMIX_VOL2:
-// 	case RK618_LINEOUT1_CTL:
-// 	case RK618_LINEOUT2_CTL:
-// 	case RK618_SPKL_CTL:
-// 	case RK618_SPKR_CTL:
-// 	case RK618_HPL_CTL:
-// 	case RK618_HPR_CTL:
-// 	case RK618_MICBIAS_CTL:
-// 	case RK618_MICKEY_DET_CTL:
-// 	case RK618_PWR_ADD3:
-// 	case RK618_ADC_CTL:
-// 	case RK618_SINGNAL_ZC_CTL1:
-// 	case RK618_SINGNAL_ZC_CTL2:
-// 	case RK618_PGAL_AGC_CTL1:
-// 	case RK618_PGAL_AGC_CTL2:
-// 	case RK618_PGAL_AGC_CTL3:
-// 	case RK618_PGAL_AGC_CTL4:
-// 	case RK618_PGAL_ASR_CTL:
-// 	case RK618_PGAL_AGC_MAX_H:
-// 	case RK618_PGAL_AGC_MAX_L:
-// 	case RK618_PGAL_AGC_MIN_H:
-// 	case RK618_PGAL_AGC_MIN_L:
-// 	case RK618_PGAL_AGC_CTL5:
-// 	case RK618_PGAR_AGC_CTL1:
-// 	case RK618_PGAR_AGC_CTL2:
-// 	case RK618_PGAR_AGC_CTL3:
-// 	case RK618_PGAR_AGC_CTL4:
-// 	case RK618_PGAR_ASR_CTL:
-// 	case RK618_PGAR_AGC_MAX_H:
-// 	case RK618_PGAR_AGC_MAX_L:
-// 	case RK618_PGAR_AGC_MIN_H:
-// 	case RK618_PGAR_AGC_MIN_L:
-// 	case RK618_PGAR_AGC_CTL5:
-// 		return 1;
-// 	default:
-// 		return 0;
-// 	}
-// }
 
 static int rk618_reset(struct snd_soc_component *component)
 {
@@ -1276,6 +1134,10 @@ static int rk618_set_bias_level(struct snd_soc_component *component,
 		break;
 
 	case SND_SOC_BIAS_PREPARE:
+        snd_soc_component_update_bits(component, RK618_MICBIAS_CTL,
+            RK618_MICBIAS2_PWRD | RK618_MICBIAS2_V_MASK,
+            RK618_MICBIAS2_V_1_7);
+        mdelay(100);
 		break;
 
 	case SND_SOC_BIAS_STANDBY:
@@ -1297,6 +1159,10 @@ static int rk618_set_bias_level(struct snd_soc_component *component,
 				RK618_DACL_ZO_PWRD | RK618_DACR_ZO_PWRD,
 				RK618_ADCL_ZO_PWRD | RK618_ADCR_ZO_PWRD |
 				RK618_DACL_ZO_PWRD | RK618_DACR_ZO_PWRD );
+
+            snd_soc_component_update_bits(component, RK618_MICBIAS_CTL,
+                RK618_MICBIAS2_PWRD | RK618_MICBIAS2_V_MASK,
+                RK618_MICBIAS2_V_1_7);
 		}
 		break;
 
@@ -1304,6 +1170,9 @@ static int rk618_set_bias_level(struct snd_soc_component *component,
 		snd_soc_component_write(component, RK618_PWR_ADD1, rk618_reg_defaults[RK618_PWR_ADD1] & ~RK618_ADC_PWRD);
 		snd_soc_component_write(component, RK618_PWR_ADD2, rk618_reg_defaults[RK618_PWR_ADD2]);
 		snd_soc_component_write(component, RK618_PWR_ADD3, rk618_reg_defaults[RK618_PWR_ADD3]);
+        snd_soc_component_update_bits(component, RK618_MICBIAS_CTL,
+            RK618_MICBIAS1_PWRD,
+            RK618_MICBIAS1_PWRD);
 		break;
 	}
 
@@ -1317,9 +1186,8 @@ static int rk618_set_dai_sysclk(struct snd_soc_dai *component_dai,
 {
 	struct rk618_codec_priv *rk618 = rk618_priv;
 
-	if (!rk618 || !rk618_mfd) {
-		printk("%s : %s %s\n", __func__, !rk618 ? "rk618 is NULL" : "",
-			!rk618_mfd ? "rk618_mfd is NULL" : "");
+	if (!rk618) {
+		printk("%s: rk618 is NULL\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1572,7 +1440,7 @@ static int rk618_digital_mute(struct snd_soc_dai *dai, int mute, int stream)
             gpiod_direction_output(rk618->hp_ctl_gpio, rk618->hp_gpio_level);
 
 		if (rk618->rcv_gpio_level)
-            gpiod_direction_output(rk618->spk_ctl_gpio, rk618->rcv_gpio_level);
+            gpiod_direction_output(rk618->rcv_ctl_gpio, rk618->rcv_gpio_level);
 	}
 
 	return 0;
@@ -1686,9 +1554,6 @@ static int rk618_probe(struct snd_soc_component *component)
 
 	rk618_reset(component);
 
-    component->dapm.bias_level = SND_SOC_BIAS_OFF;
-    // rk618_set_bias_level(component, SND_SOC_BIAS_STANDBY);
-
 	return 0;
 err__:
 	kfree(rk618_codec_data);
@@ -1731,6 +1596,9 @@ static struct snd_soc_component_driver soc_codec_dev_rk618 = {
 	.remove =	rk618_remove,
 	.suspend =	rk618_suspend,
 	.resume =	rk618_resume,
+	.idle_bias_on = 1,
+	.use_pmdown_time = 1,
+	.endianness = 1,
 	.set_bias_level = rk618_set_bias_level,
 	.controls = rk618_snd_controls,
 	.num_controls = ARRAY_SIZE(rk618_snd_controls),
