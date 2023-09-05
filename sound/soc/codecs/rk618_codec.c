@@ -363,44 +363,44 @@ int snd_soc_put_pgal_volsw(struct snd_kcontrol *kcontrol,
 }
 
 //for setting volume pop noise, turn volume step up/down.
-int snd_soc_put_step_volsw_2r(struct snd_kcontrol *kcontrol,
+int snd_soc_put_step_volsw(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
 	struct soc_mixer_control *mc =
 		(struct soc_mixer_control *)kcontrol->private_value;
 	struct snd_soc_component *component = snd_kcontrol_chip(kcontrol);
-	unsigned int reg = mc->reg;
-	unsigned int reg2 = mc->rreg;
+	unsigned int reg_l = mc->reg;
+	unsigned int reg_r = mc->rreg;
 	unsigned int shift = mc->shift;
 	int max = mc->max;
 	unsigned int mask = (1 << fls(max)) - 1;
 	unsigned int invert = mc->invert;
 	int err = 0;
-	unsigned int val, val2, val_mask, old_l, old_r, old_reg_l, old_reg_r, step = 1;
+	unsigned int val_l, val_r, val_mask, old_l, old_r, old_reg_l, old_reg_r, step = 1;
 
 	val_mask = mask << shift;
-	val = (ucontrol->value.integer.value[0] & mask);
-	val2 = (ucontrol->value.integer.value[1] & mask);
+	val_l = (ucontrol->value.integer.value[0] & mask);
+	val_r = (ucontrol->value.integer.value[1] & mask);
 
-	old_reg_l = snd_soc_component_read(component, reg);
+	old_reg_l = snd_soc_component_read(component, reg_l);
 	old_l = (old_reg_l & val_mask) >> shift;
 
-	old_reg_r = snd_soc_component_read(component, reg);
+	old_reg_r = snd_soc_component_read(component, reg_r);
 	old_r = (old_reg_r & val_mask) >> shift;
 
 	old_reg_l &= ~mask;
 	old_reg_r &= ~mask;
 
-	while (old_l != val || old_r != val2) {
-		if (old_l != val) {
-			if (old_l > val) {
+	while (old_l != val_l || old_r != val_r) {
+		if (old_l != val_l) {
+			if (old_l > val_l) {
 				old_l -= step;
-				if (old_l < val)
-					old_l = val;
+				if (old_l < val_l)
+					old_l = val_l;
 			} else {
 				old_l += step;
-				if (old_l > val)
-					old_l = val;
+				if (old_l > val_l)
+					old_l = val_l;
 			}
 
 			if (invert) {
@@ -409,19 +409,19 @@ int snd_soc_put_step_volsw_2r(struct snd_kcontrol *kcontrol,
 
 			old_l = old_l << shift;
 
-			err = snd_soc_component_write(component, reg, old_reg_l | old_l);
+			err = snd_soc_component_write(component, reg_l, old_reg_l | old_l);
 			if (err < 0)
 				return err;
 		}
-		if (old_r != val2) {
-			if (old_r > val2) {
+		if (old_r != val_r) {
+			if (old_r > val_r) {
 				old_r -= step;
-				if (old_r < val2)
-					old_r = val2;
+				if (old_r < val_r)
+					old_r = val_r;
 			} else {
 				old_r += step;
-				if (old_r > val2)
-					old_r = val2;
+				if (old_r > val_r)
+					old_r = val_r;
 			}
 
 			if (invert) {
@@ -430,7 +430,7 @@ int snd_soc_put_step_volsw_2r(struct snd_kcontrol *kcontrol,
 
 			old_r = old_r << shift;
 
-			err = snd_soc_component_write(component, reg2, old_reg_r | old_r);
+			err = snd_soc_component_write(component, reg_r, old_reg_r | old_r);
 			if (err < 0)
 				return err;
 		}
