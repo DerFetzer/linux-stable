@@ -56,18 +56,6 @@
 #define SPK_AMP_DELAY 150
 #define HP_MOS_DELAY 50
 
-//for route
-#define RK618_CODEC_PLAYBACK	1
-#define RK618_CODEC_CAPTURE	2
-#define RK618_CODEC_INCALL	4
-#define RK618_CODEC_ALL	(RK618_CODEC_PLAYBACK | RK618_CODEC_CAPTURE | RK618_CODEC_INCALL)
-
-//for gpio
-#define RK618_CODEC_SET_SPK	1
-#define RK618_CODEC_SET_HP	2
-#define RK618_CODEC_SET_RCV	4
-#define RK618_CODEC_SET_MIC	8
-
 struct rk618_codec_priv {
 	struct snd_soc_component *component;
 	struct clk *mclk;
@@ -81,15 +69,9 @@ struct rk618_codec_priv {
 	struct gpio_desc *hp_ctl_gpio;
 	struct gpio_desc *rcv_ctl_gpio;
 	struct gpio_desc *mic_sel_gpio;
-
-	int spk_gpio_level;
-	int hp_gpio_level;
-	int rcv_gpio_level;
-	int mic_gpio_level;
 };
 
 static struct rk618_codec_priv *rk618_priv = NULL;
-static bool is_hdmi_in = false;
 
 static const unsigned int rk618_reg_defaults[RK618_PGAR_AGC_CTL5 + 1] = {
 	[RK618_RESET] = 0x0003,
@@ -189,46 +171,6 @@ static int rk618_reset(struct snd_soc_component *component)
 	return 0;
 }
 
-bool get_hdmi_state(void)
-{
-	return is_hdmi_in;
-}
-
-void rk618_codec_set_spk(bool on)
-{
-	struct rk618_codec_priv *rk618 = rk618_priv;
-	struct snd_soc_component *component;
-
-	dev_dbg(rk618_priv->component->dev, "%s : %s\n", __func__, on ? "enable spk" : "disable spk");
-
-	if (!rk618 || !rk618->component) {
-		printk("%s : rk618_priv or rk618_priv->codec is NULL\n", __func__);
-		return;
-	}
-
-	component = rk618->component;
-
-	if (on) {
-        mutex_lock(&component->io_mutex);
-        snd_soc_dapm_enable_pin(&component->dapm, "Headphone Jack");
-        snd_soc_dapm_enable_pin(&component->dapm, "Ext Spk");
-        snd_soc_dapm_sync(&component->dapm);
-        mutex_unlock(&component->io_mutex);
-	} else {
-		gpiod_direction_output(rk618->spk_ctl_gpio, 0);
-		gpiod_direction_output(rk618->hp_ctl_gpio, 0);
-
-        mutex_lock(&component->io_mutex);
-        snd_soc_dapm_disable_pin(&component->dapm, "Headphone Jack");
-        snd_soc_dapm_disable_pin(&component->dapm, "Ext Spk");
-        snd_soc_dapm_sync(&component->dapm);
-        mutex_unlock(&component->io_mutex);
-	}
-
-	is_hdmi_in = on ? 0 : 1;
-}
-EXPORT_SYMBOL_GPL(rk618_codec_set_spk);
-
 static const DECLARE_TLV_DB_SCALE(out_vol_tlv, -3900, 150, 0);
 static const DECLARE_TLV_DB_SCALE(pga_vol_tlv, -1800, 150, 0);
 static const DECLARE_TLV_DB_SCALE(bst_vol_tlv, 0, 2000, 0);
@@ -273,8 +215,6 @@ static const char *rk618_pga_agc_update_gain[] = {"Right Now", "After 1st Zero C
 
 static const char *rk618_pga_agc_approximate_sample_rate[] = {"48KHz", "32KHz",
 		"24KHz", "16KHz", "12KHz", "8KHz"};
-
-static const char *rk618_gpio_sel[] = {"Low", "High"};
 
 static const struct soc_enum rk618_bst_enum[] = {
 SOC_ENUM_SINGLE(RK618_BST_CTL, RK618_BSTL_MODE_SFT, 2, rk618_input_mode),
@@ -334,13 +274,6 @@ SOC_ENUM_SINGLE(RK618_PGAR_AGC_CTL5, RK618_PGA_AGC_SFT, 2, rk618_dis_en_sel),/*1
 
 static const struct soc_enum rk618_loop_enum =
 	SOC_ENUM_SINGLE(RK618_CFGMISC_CON, AD_DA_LOOP_SFT, 2, rk618_dis_en_sel);
-
-static const struct soc_enum rk618_gpio_enum[] = {
-	SOC_ENUM_SINGLE(RK618_CODEC_SET_SPK, 0, 2, rk618_gpio_sel),
-	SOC_ENUM_SINGLE(RK618_CODEC_SET_HP, 0, 2, rk618_gpio_sel),
-	SOC_ENUM_SINGLE(RK618_CODEC_SET_RCV, 0, 2, rk618_gpio_sel),
-	SOC_ENUM_SINGLE(RK618_CODEC_SET_MIC, 0, 2, rk618_gpio_sel),
-};
 
 int snd_soc_put_pgal_volsw(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
@@ -438,78 +371,13 @@ int snd_soc_put_step_volsw(struct snd_kcontrol *kcontrol,
 	return err;
 }
 
-int snd_soc_get_gpio_enum_double(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
-	struct rk618_codec_priv *rk618 = rk618_priv;
-
-	if (!rk618) {
-		printk("%s : rk618_priv is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	switch(e->reg) {
-	case RK618_CODEC_SET_SPK:
-		ucontrol->value.enumerated.item[0] = rk618->spk_gpio_level;
-		break;
-	case RK618_CODEC_SET_HP:
-		ucontrol->value.enumerated.item[0] = rk618->hp_gpio_level;
-		break;
-	case RK618_CODEC_SET_RCV:
-		ucontrol->value.enumerated.item[0] = rk618->rcv_gpio_level;
-		break;
-	case RK618_CODEC_SET_MIC:
-		ucontrol->value.enumerated.item[0] = rk618->mic_gpio_level;
-		break;
-	default:
-		return -EINVAL;
-	}
-	return 0;
-}
-
-int snd_soc_put_gpio_enum_double(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
-	struct rk618_codec_priv *rk618 = rk618_priv;
-
-	if (!rk618) {
-		printk("%s : rk618_priv is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	if (ucontrol->value.enumerated.item[0] > e->items - 1)
-		return -EINVAL;
-
-	//The gpio of SPK HP and RCV will be setting in digital_mute for pop noise.
-	switch(e->reg) {
-	case RK618_CODEC_SET_SPK:
-		rk618->spk_gpio_level = ucontrol->value.enumerated.item[0];
-		break;
-	case RK618_CODEC_SET_HP:
-		rk618->hp_gpio_level = ucontrol->value.enumerated.item[0];
-		break;
-	case RK618_CODEC_SET_RCV:
-		rk618->rcv_gpio_level = ucontrol->value.enumerated.item[0];
-		break;
-	case RK618_CODEC_SET_MIC:
-		rk618->mic_gpio_level = ucontrol->value.enumerated.item[0];
-		return gpiod_direction_output(rk618->mic_sel_gpio, ucontrol->value.enumerated.item[0]);
-	default:
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 #define SOC_DOUBLE_R_STEP_TLV(xname, reg_left, reg_right, xshift, xmax, xinvert, tlv_array) \
 {	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = (xname),\
 	.access = SNDRV_CTL_ELEM_ACCESS_TLV_READ |\
 		 SNDRV_CTL_ELEM_ACCESS_READWRITE,\
 	.tlv.p = (tlv_array), \
 	.info = snd_soc_info_volsw, \
-	.get = snd_soc_get_volsw, .put = snd_soc_put_step_volsw_2r, \
+	.get = snd_soc_get_volsw, .put = snd_soc_put_step_volsw, \
 	.private_value = (unsigned long)&(struct soc_mixer_control) \
 		{.reg = reg_left, .rreg = reg_right, .shift = xshift, \
 		.max = xmax, .platform_max = xmax, .invert = xinvert} }
@@ -527,16 +395,11 @@ static const struct snd_kcontrol_new rk618_snd_controls[] = {
 			RK618_SPKR_CTL, RK618_VOL_SFT, SPKOUT_VOLUME, 0, out_vol_tlv),
 	SOC_DOUBLE_R_STEP_TLV("Headphone Playback Volume", RK618_HPL_CTL,
 			RK618_HPR_CTL, RK618_VOL_SFT, HPOUT_VOLUME, 0, out_vol_tlv),
-	SOC_DOUBLE_R_STEP_TLV("Earpiece Playback Volume", RK618_SPKL_CTL,
-			RK618_SPKR_CTL, RK618_VOL_SFT, SPKOUT_VOLUME, 0, out_vol_tlv),
 
 	SOC_DOUBLE_R("Speaker Playback Switch", RK618_SPKL_CTL,
 		RK618_SPKR_CTL, RK618_MUTE_SFT, 1, 1),
 
 	SOC_DOUBLE_R("Headphone Playback Switch", RK618_HPL_CTL,
-		RK618_HPR_CTL, RK618_MUTE_SFT, 1, 1),
-
-	SOC_DOUBLE_R("Earpiece Playback Switch", RK618_HPL_CTL,
 		RK618_HPR_CTL, RK618_MUTE_SFT, 1, 1),
 
 	SOC_SINGLE_TLV("LINEOUT1 Playback Volume", RK618_LINEOUT1_CTL,
@@ -683,30 +546,7 @@ static const struct snd_kcontrol_new rk618_snd_controls[] = {
 		RK618_PGA_AGC_MIN_G_SFT, 7, 0, pga_agc_min_vol_tlv),//AGC enable and 0x06 bit 4 is 1
 
 	SOC_ENUM("I2S Loop Enable",  rk618_loop_enum),
-
-	SOC_GPIO_ENUM("SPK GPIO Control",  rk618_gpio_enum[0]),
-	SOC_GPIO_ENUM("HP GPIO Control",  rk618_gpio_enum[1]),
-	SOC_GPIO_ENUM("RCV GPIO Control",  rk618_gpio_enum[2]),
-	SOC_GPIO_ENUM("MIC GPIO Control",  rk618_gpio_enum[3]),
 };
-
-//For tiny alsa playback/capture/voice call path
-static const char *rk618_playback_path_mode[] = {"OFF", "RCV", "SPK", "HP", "HP_NO_MIC", "BT", "SPK_HP", //0-6
-		"RING_SPK", "RING_HP", "RING_HP_NO_MIC", "RING_SPK_HP"};//7-10
-
-static const char *rk618_capture_path_mode[] = {"MIC OFF", "Main Mic", "Hands Free Mic", "BT Sco Mic"};
-
-static const char *rk618_call_path_mode[] = {"OFF", "RCV", "SPK", "HP", "HP_NO_MIC", "BT"};//0-5
-
-static const char *rk618_modem_input_mode[] = {"OFF", "ON"};
-
-static SOC_ENUM_SINGLE_DECL(rk618_playback_path_type, 0, 0, rk618_playback_path_mode);
-
-static SOC_ENUM_SINGLE_DECL(rk618_capture_path_type, 0, 0, rk618_capture_path_mode);
-
-static SOC_ENUM_SINGLE_DECL(rk618_call_path_type, 0, 0, rk618_call_path_mode);
-
-static SOC_ENUM_SINGLE_DECL(rk618_modem_input_type, 0, 0, rk618_modem_input_mode);
 
 static int rk618_dacl_event(struct snd_soc_dapm_widget *w,
 	struct snd_kcontrol *kcontrol, int event)
@@ -1191,6 +1031,8 @@ static int rk618_set_dai_sysclk(struct snd_soc_dai *component_dai,
 		return -EINVAL;
 	}
 
+	dev_dbg(rk618_priv->component->dev, "%s : freq = %d\n", __func__, freq);
+
 	rk618->stereo_sysclk = freq;
 
 	//set I2S mclk for mipi
@@ -1204,6 +1046,8 @@ static int rk618_set_dai_fmt(struct snd_soc_dai *component_dai,
 {
 	struct snd_soc_component *component = component_dai->component;
 	unsigned int adc_aif1 = 0, adc_aif2 = 0, dac_aif1 = 0, dac_aif2 = 0;
+
+	dev_dbg(rk618_priv->component->dev, "%s : fmt = %d\n", __func__, fmt);
 
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBS_CFS:
@@ -1292,6 +1136,7 @@ static int rk618_hw_params(struct snd_pcm_substream *substream,
 	struct rk618_codec_priv *rk618 = rk618_priv;
 	unsigned int rate = params_rate(params);
 	unsigned int div;
+    unsigned int dai_fmt = rtd->card->dai_link->dai_fmt;
 	unsigned int adc_aif1 = 0, adc_aif2  = 0, dac_aif1 = 0, dac_aif2  = 0;
 	u32 mfd_aif1 = 0, mfd_aif2 = 0, mfd_i2s_ctl = 0;
 
@@ -1300,21 +1145,21 @@ static int rk618_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_SND_RK29_CODEC_SOC_MASTER
-	// bclk = component_clk / 4
-	// lrck = bclk / (wl * 2)
-	div = (((rk618->stereo_sysclk / 4) / rate) / 2);
+	if ((dai_fmt & SND_SOC_DAIFMT_MASTER_MASK) == SND_SOC_DAIFMT_CBM_CFM) {
+		// bclk = codec_clk / 4
+		// lrck = bclk / (wl * 2)
+		div = (((rk618->stereo_sysclk / 4) / rate) / 2);
 
-	if ((rk618->stereo_sysclk % (4 * rate * 2) > 0) ||
-	    (div != 16 && div != 20 && div != 24 && div != 32)) {
-		printk("%s : need PLL\n", __func__);
-		return -EINVAL;
+		if ((rk618->stereo_sysclk % (4 * rate * 2) > 0) ||
+		    (div != 16 && div != 20 && div != 24 && div != 32)) {
+			printk("%s : need PLL\n", __func__);
+			return -EINVAL;
+		}
+	} else {
+		//If codec is slave mode, it don't need to set div
+		//according to sysclk and rate.
+		div = 32;
 	}
-#else
-	//If component is slave mode, it don't need to set div
-	//according to sysclk and rate.
-	div = 32;
-#endif
 
 	switch (div) {
 	case 16:
@@ -1433,14 +1278,9 @@ static int rk618_digital_mute(struct snd_soc_dai *dai, int mute, int stream)
         gpiod_direction_output(rk618->hp_ctl_gpio, 0);
         gpiod_direction_output(rk618->rcv_ctl_gpio, 0);
 	} else {
-		if (rk618->spk_gpio_level)
-            gpiod_direction_output(rk618->spk_ctl_gpio, rk618->spk_gpio_level);
-
-		if (rk618->hp_gpio_level)
-            gpiod_direction_output(rk618->hp_ctl_gpio, rk618->hp_gpio_level);
-
-		if (rk618->rcv_gpio_level)
-            gpiod_direction_output(rk618->rcv_ctl_gpio, rk618->rcv_gpio_level);
+        gpiod_direction_output(rk618->spk_ctl_gpio, 1);
+        gpiod_direction_output(rk618->hp_ctl_gpio, 1);
+        gpiod_direction_output(rk618->rcv_ctl_gpio, 1);
 	}
 
 	return 0;
@@ -1537,12 +1377,6 @@ static int rk618_probe(struct snd_soc_component *component)
 
 	snd_soc_component_init_regmap(component, rk618->regmap);
 	rk618_codec_data->component = component;
-
-	rk618_codec_data->spk_gpio_level = 0;
-	rk618_codec_data->hp_gpio_level = 0;
-	rk618_codec_data->rcv_gpio_level = 0;
-	rk618_codec_data->mic_gpio_level = 0;
-
 	rk618_priv = rk618_codec_data;
 
 	val = snd_soc_component_read(component, RK618_RESET);
@@ -1647,6 +1481,10 @@ static int rk618_codec_parse_dt_property(struct device *dev,
 		dev_err(dev, "failed to request micsel GPIO: %d\n", ret);
 		return ret;
 	}
+
+	if (of_property_read_bool(node, "rockchip,use-spkctl-for-hpctl")) {
+        rk618->hp_ctl_gpio = rk618->spk_ctl_gpio;
+    }
 
 	of_node_put(node);
 

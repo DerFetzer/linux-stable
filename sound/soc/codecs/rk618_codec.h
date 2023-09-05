@@ -780,7 +780,4 @@ struct rk618_init_bit_typ {
 	unsigned int init_bit;
 };
 
-bool rk618_get_for_mid(void);
-bool get_hdmi_state(void);
-
 #endif //__RK618_CODEC_H__
