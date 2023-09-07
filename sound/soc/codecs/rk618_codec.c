@@ -812,10 +812,18 @@ static const struct snd_soc_dapm_widget rk618_dapm_widgets[] = {
 		RK618_PWRD_SFT, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("SPKR", RK618_SPKR_CTL,
 		RK618_PWRD_SFT, 1, NULL, 0),
+	SND_SOC_DAPM_PGA("SPKLINIT", RK618_SPKL_CTL,
+		RK618_INIT_SFT, 1, NULL, 0),
+	SND_SOC_DAPM_PGA("SPKRINIT", RK618_SPKR_CTL,
+		RK618_INIT_SFT, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("HPL", RK618_HPL_CTL,
 		RK618_PWRD_SFT, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("HPR", RK618_HPR_CTL,
 		RK618_PWRD_SFT, 1, NULL, 0),
+	SND_SOC_DAPM_PGA("HPLINIT", RK618_HPL_CTL,
+		RK618_INIT_SFT, 1, NULL, 0),
+	SND_SOC_DAPM_PGA("HPRINIT", RK618_HPR_CTL,
+		RK618_INIT_SFT, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("LINE1", RK618_LINEOUT1_CTL,
 		RK618_LINEOUT_PWRD_SFT, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("LINE2", RK618_LINEOUT2_CTL,
@@ -955,15 +963,23 @@ static const struct snd_soc_dapm_route rk618_dapm_routes[] = {
 	{"LINE2", NULL, "LINEMIX"},
 	{"SPKR", NULL, "HPR Mux"},
 	{"SPKL", NULL, "HPL Mux"},
+	{"SPKRINIT", NULL, "HPR Mux"},
+	{"SPKLINIT", NULL, "HPL Mux"},
 	{"HPR", NULL, "HPR Mux"},
 	{"HPL", NULL, "HPL Mux"},
+	{"HPRINIT", NULL, "HPR Mux"},
+	{"HPLINIT", NULL, "HPL Mux"},
 
 	{"LINEOUT1", NULL, "LINE1"},
 	{"LINEOUT2", NULL, "LINE2"},
 	{"SPKOUTR", NULL, "SPKR"},
 	{"SPKOUTL", NULL, "SPKL"},
+	{"SPKOUTR", NULL, "SPKRINIT"},
+	{"SPKOUTL", NULL, "SPKLINIT"},
 	{"HPOUTR", NULL, "HPR"},
 	{"HPOUTL", NULL, "HPL"},
+	{"HPOUTR", NULL, "HPRINIT"},
+	{"HPOUTL", NULL, "HPLINIT"},
 };
 
 static int rk618_set_bias_level(struct snd_soc_component *component,
@@ -1259,8 +1275,8 @@ static int rk618_hw_params(struct snd_pcm_substream *substream,
 	snd_soc_component_update_bits(component, RK618_IO_CON1,
 			I2S1_IO_SCHMITT_INPUT_ENABLE | I2S0_IO_SCHMITT_INPUT_ENABLE, mfd_aif2);
 	snd_soc_component_update_bits(component, RK618_PCM2IS2_CON2,
-			APS_SEL | APS_CLR | I2S_CHANNEL_SEL,
-			mfd_i2s_ctl);
+			APS_SEL | APS_CLR | I2S_CHANNEL_SEL | 0xffff << 16,
+			mfd_i2s_ctl | 0xffff << 16);
 	return 0;
 }
 
@@ -1281,6 +1297,7 @@ static int rk618_digital_mute(struct snd_soc_dai *dai, int mute, int stream)
         gpiod_direction_output(rk618->spk_ctl_gpio, 1);
         gpiod_direction_output(rk618->hp_ctl_gpio, 1);
         gpiod_direction_output(rk618->rcv_ctl_gpio, 1);
+        mdelay(150);
 	}
 
 	return 0;

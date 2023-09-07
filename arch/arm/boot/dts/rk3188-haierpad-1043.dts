@@ -308,7 +308,7 @@
 		compatible = "rockchip,rk618";
 		reg = <0x50>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&lcdc1_dclk>, <&lcdc1_den>, <&lcdc1_hsync>, <&lcdc1_vsync>, <&lcdc1_rgb24>;
+		pinctrl-0 = <&lcdc1_dclk>, <&lcdc1_den>, <&lcdc1_hsync>, <&lcdc1_vsync>, <&lcdc1_rgb24>, <&rk618_spkctl>, <&rk618_hpdet>;
 		clocks = <&cru SCLK_I2S0>;
 		clock-names = "clkin";
 		assigned-clocks = <&cru SCLK_I2S0>;
@@ -319,6 +319,9 @@
 
 		codec: codec {
 			compatible = "rockchip,rk618-codec";
+            spkctl-gpio = <&gpio2 RK_PD7 GPIO_ACTIVE_HIGH>;
+            hpdet-gpio = <&gpio3 RK_PD4 GPIO_ACTIVE_HIGH>; 
+            rockchip,use-spkctl-for-hpctl;
             #sound-dai-cells = <0>;
 			status = "okay";
 		};
@@ -520,6 +523,12 @@
 	rk618 {
 		rk618_pwr: rk618-pwr {
 			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+		rk618_spkctl: rk618-spkctl {
+			rockchip,pins = <2 RK_PD7 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+		rk618_hpdet: rk618-hpdet {
+			rockchip,pins = <3 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
