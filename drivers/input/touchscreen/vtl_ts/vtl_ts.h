@@ -20,7 +20,7 @@
 
 #define TS_I2C_SPEED 400000 //for rockchip
 
-#define CHIP_UPDATE_ENABLE 1
+#define CHIP_UPDATE_ENABLE 0 // Use stock firmware since the one in tp_fw.h does not work
 
 #define DEBUG_ENABLE 0
 
