@@ -447,7 +447,7 @@
 &mmc1 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&sd1_clk_pu>, <&sd1_cmd_pu>, <&sd1_cd_pu>, <&sd1_bus4_pu>;
+	pinctrl-0 = <&sd1_clk_pu>, <&sd1_cmd_pu>, <&sd1_bus4_pu>;
 	bus-width = <4>;
 	mmc-pwrseq = <&wifi_pwrseq>;
 	vmmc-supply = <&vcc_ap6210>;
@@ -529,10 +529,6 @@
 
         sd1_cmd_pu: sd1-cmd-pu {
             rockchip,pins = <3 RK_PC0 1 &pcfg_pull_up>;
-        };
-
-        sd1_cd_pu: sd1-cd-pu {
-            rockchip,pins = <3 RK_PC6 1 &pcfg_pull_up>;
         };
 
         sd1_bus4_pu: sd1-bus-width4-pu {
