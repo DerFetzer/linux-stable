@@ -169,6 +169,7 @@
 
 &gpu {
 	status = "okay";
+    assigned-clock-rates = <297000000>;
 };
 
 &cru {
@@ -177,13 +178,15 @@
 			  <&cru HCLK_CPU>, <&cru PCLK_CPU>,
 			  <&cru ACLK_PERI>, <&cru HCLK_PERI>,
 			  <&cru PCLK_PERI>,
-              <&cru SCLK_SDMMC>, <&cru SCLK_SDIO>;
+              <&cru SCLK_SDMMC>, <&cru SCLK_SDIO>,
+              <&cru HCLK_VDPU>, <&cru HCLK_VEPU>;
 	assigned-clock-rates = <768000000>, <594000000>,
 			       <192000000>,
 			       <96000000>, <48000000>,
 			       <192000000>, <96000000>,
 			       <48000000>,
-			       <48000000>, <24000000>;
+			       <48000000>, <24000000>,
+			       <74250000>, <74250000>;
 };
 
 &i2c0 {
