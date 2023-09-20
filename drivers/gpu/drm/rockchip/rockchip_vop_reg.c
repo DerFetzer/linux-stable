@@ -538,7 +538,8 @@ static const struct vop_modeset rk3188_modeset = {
 };
 
 static const struct vop_output rk3188_output = {
-	.pin_pol = VOP_REG(RK3188_DSP_CTRL0, 0xf, 4),
+	.pin_pol = VOP_REG(RK3188_DSP_CTRL0, 0x7, 4),
+	.rgb_dclk_pol = VOP_REG(RK3188_DSP_CTRL0, 0x1, 7),
 };
 
 static const struct vop_common rk3188_common = {
